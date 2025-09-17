@@ -1,1 +1,29 @@
-data/\nresults/\n*.pyc\n__pycache__/\n*.ipynb_checkpoints/
+# Ignore Python cache & temporary files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.ipynb_checkpoints/
+
+# Ignore environment files
+.env
+.venv/
+*.env
+
+# Ignore raw & processed data (but keep folder structure via .gitkeep)
+data/raw/*
+data/interim/*
+data/processed/*
+data/external/*
+!data/**/.gitkeep
+
+# Ignore results (figures/tables/logs), keep structure
+results/figures/*
+results/tables/*
+results/logs/*
+!results/**/.gitkeep
+
+# Ignore thesis build outputs (but keep folder structure)
+thesis/figures/*
+thesis/bib/*
+!thesis/**/.gitkeep
