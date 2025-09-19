@@ -11,7 +11,7 @@ api_key = os.getenv("ENTSOE_API_KEY")
 client = EntsoePandasClient(api_key=api_key)
 
 start = pd.Timestamp("2020-01-01", tz="Europe/Zurich")
-end = pd.Timestamp("2024-12-31", tz="Europe/Zurich")
+end = pd.Timestamp("2025-01-01", tz="Europe/Zurich")
 
 #creating loop for the different bidding zones
 bidding_zones = {
