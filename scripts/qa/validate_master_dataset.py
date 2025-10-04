@@ -1,55 +1,63 @@
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
-from pathlib import Path
+import os
 
-def validate_master_dataset(infile="data/processed/master_dataset_clean.csv", sample_frac=0.02):
-    print(f"[info] Loading dataset from {infile}...")
+def validate_master_dataset(
+    infile="data/processed/master_dataset.csv",
+    report_dir="reports/qa",
+    sample_frac=0.02
+):
+    # make sure report directory exists
+    os.makedirs(report_dir, exist_ok=True)
+
+    print(f"[info] loading dataset from {infile}...")
     df = pd.read_csv(infile, parse_dates=["delivery_start_local"], low_memory=False)
+    print(f"[info] validating dataset: {df.shape}")
 
-    # === Basic Info ===
+    # === basic info ===
     print("\n=== Basic Info ===")
     print(f"Shape: {df.shape}")
     print(f"Columns: {list(df.columns)}")
 
-    # === Missing Values ===
+    # === missing values ===
     print("\n=== Missing Values (Top 20) ===")
     print(df.isna().sum().sort_values(ascending=False).head(20))
 
-    # === Summary Stats ===
+    # === summary stats for numeric cols ===
     print("\n=== Summary Stats (numeric) ===")
     print(df.describe().transpose().head(15))
 
-    # === Correlation (full dataset, numeric only) ===
-    numeric_df = df.select_dtypes(include=["float64", "int64"])
-    corr = numeric_df.corr()
-    corr_out = Path("reports/qa")
-    corr_out.mkdir(parents=True, exist_ok=True)
-    corr.to_csv(corr_out / "correlation_matrix.csv")
-    print(f"[ok] Correlation matrix saved -> {corr_out/'correlation_matrix.csv'}")
+    # save numeric correlation matrix to csv
+    numeric_cols = df.select_dtypes(include=["number"])
+    corr_matrix = numeric_cols.corr()
+    corr_out = os.path.join(report_dir, "correlation_matrix.csv")
+    corr_matrix.to_csv(corr_out)
+    print(f"[ok] correlation matrix saved -> {corr_out}")
 
-    # === Visuals on sample only ===
-    print(f"\n[info] Sampling {sample_frac*100:.1f}% for visuals...")
+    # === plots (on sample for speed) ===
+    print(f"[info] sampling {sample_frac*100:.1f}% for visuals...")
     sample = df.sample(frac=sample_frac, random_state=42)
 
-    # Missing values heatmap
+    # missing values heatmap
     plt.figure(figsize=(12, 6))
     sns.heatmap(sample.isna(), cbar=False)
-    plt.title("Missing Values Heatmap (sampled)")
+    plt.title("Missing Values Heatmap (sample)")
     plt.tight_layout()
-    plt.savefig(corr_out / "missing_heatmap.png")
+    plt.savefig(os.path.join(report_dir, "missing_heatmap.png"))
     plt.close()
-    print(f"[ok] Saved missing values heatmap -> {corr_out/'missing_heatmap.png'}")
+    print(f"[ok] saved missing values heatmap -> {report_dir}/missing_heatmap.png")
 
-    # Correlation heatmap (sample, numeric only)
-    sample_numeric = sample.select_dtypes(include=["float64", "int64"])
-    plt.figure(figsize=(10, 8))
-    sns.heatmap(sample_numeric.corr(), cmap="coolwarm", center=0)
-    plt.title("Correlation Heatmap (sampled, numeric only)")
+    # correlation heatmap (numeric only)
+    plt.figure(figsize=(12, 10))
+    numeric_sample = sample.select_dtypes(include=["number"])  # only numeric columns
+    sns.heatmap(numeric_sample.corr(), cmap="coolwarm", center=0)
+    plt.title("Correlation Heatmap (numeric only, sample)")
     plt.tight_layout()
-    plt.savefig(corr_out / "correlation_heatmap.png")
+    plt.savefig(os.path.join(report_dir, "correlation_heatmap.png"))
     plt.close()
-    print(f"[ok] Saved correlation heatmap -> {corr_out/'correlation_heatmap.png'}")
+    print(f"[ok] saved correlation heatmap -> {report_dir}/correlation_heatmap.png")
+
 
 if __name__ == "__main__":
     validate_master_dataset()
